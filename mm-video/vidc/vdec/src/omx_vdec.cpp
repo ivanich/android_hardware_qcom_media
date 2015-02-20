@@ -916,11 +916,15 @@ void omx_vdec::process_event_cb(void *ctxt, unsigned char id)
           {
             if (p2 == VDEC_S_INPUT_BITSTREAM_ERR && p1)
             {
-              pThis->m_inp_err_count++;
-              pThis->time_stamp_dts.remove_time_stamp(
-              ((OMX_BUFFERHEADERTYPE *)p1)->nTimeStamp,
-              (pThis->drv_ctx.interlace != VDEC_InterlaceFrameProgressive)
-                ?true:false);
+               if (!(((OMX_BUFFERHEADERTYPE *)p1)->nFlags & OMX_BUFFERFLAG_CODECCONFIG))
+               {
+                  DEBUG_PRINT_HIGH("remove the timestamp from queue for VDEC_S_INPUT_BITSTREAM_ERR");
+                  pThis->m_inp_err_count++;
+                  pThis->time_stamp_dts.remove_time_stamp(
+                  ((OMX_BUFFERHEADERTYPE *)p1)->nTimeStamp,
+                  (pThis->drv_ctx.interlace != VDEC_InterlaceFrameProgressive)
+                  ?true:false);
+               }
             }
             else
             {
@@ -3556,7 +3560,8 @@ OMX_ERRORTYPE  omx_vdec::set_parameter(OMX_IN OMX_HANDLETYPE     hComp,
           }
 #ifdef MAX_RES_1080P
           else if((!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx",OMX_MAX_STRINGNAME_SIZE)) ||
-                  (!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx311",OMX_MAX_STRINGNAME_SIZE))
+                  (!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx311",OMX_MAX_STRINGNAME_SIZE)) ||
+                  (!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx4", OMX_MAX_STRINGNAME_SIZE))
                   )
 #else
           else if(!strncmp(drv_ctx.kind, "OMX.qcom.video.decoder.divx",OMX_MAX_STRINGNAME_SIZE))
