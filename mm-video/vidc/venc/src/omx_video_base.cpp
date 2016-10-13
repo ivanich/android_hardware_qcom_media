@@ -2609,7 +2609,7 @@ OMX_ERRORTYPE omx_video::free_input_buffer(OMX_BUFFERHEADERTYPE *bufferHdr)
     return OMX_ErrorBadParameter;
   }
 
-  index = bufferHdr - ((!mUseProxyColorFormat)?m_inp_mem_ptr:meta_buffer_hdr);
+  index = bufferHdr - ((!meta_mode_enable)?m_inp_mem_ptr:meta_buffer_hdr);
 #ifdef _ANDROID_ICS_
   if(meta_mode_enable)
   {
@@ -2733,7 +2733,7 @@ OMX_ERRORTYPE omx_video::allocate_input_meta_buffer(
                     OMX_U32              bytes)
 {
   unsigned index = 0;
-  if(!bufferHdr || bytes != sizeof(encoder_media_buffer_type))
+  if(!bufferHdr || bytes < sizeof(encoder_media_buffer_type))
   {
     DEBUG_PRINT_ERROR("wrong params allocate_input_meta_buffer Hdr %p len %d",
                      bufferHdr,bytes);
@@ -2763,7 +2763,7 @@ OMX_ERRORTYPE omx_video::allocate_input_meta_buffer(
   *bufferHdr = &meta_buffer_hdr[index];
   memset(&meta_buffer_hdr[index], 0, sizeof(meta_buffer_hdr[index]));
   meta_buffer_hdr[index].nSize = sizeof(meta_buffer_hdr[index]);
-  meta_buffer_hdr[index].nAllocLen = bytes;
+  meta_buffer_hdr[index].nAllocLen = sizeof(meta_buffers[index]);
   meta_buffer_hdr[index].nVersion.nVersion = OMX_SPEC_VERSION;
   meta_buffer_hdr[index].nInputPortIndex = PORT_INDEX_IN;
   meta_buffer_hdr[index].pBuffer = (OMX_U8*)&meta_buffers[index];
@@ -2999,7 +2999,7 @@ OMX_ERRORTYPE  omx_video::allocate_output_buffer(
         bufHdr->nSize              = sizeof(OMX_BUFFERHEADERTYPE);
         bufHdr->nVersion.nVersion  = OMX_SPEC_VERSION;
         // Set the values when we determine the right HxW param
-        bufHdr->nAllocLen          = bytes;
+        bufHdr->nAllocLen          = m_sOutPortDef.nBufferSize;
         bufHdr->nFilledLen         = 0;
         bufHdr->pAppPrivate        = appData;
         bufHdr->nOutputPortIndex   = PORT_INDEX_OUT;
@@ -3249,7 +3249,7 @@ OMX_ERRORTYPE  omx_video::free_buffer(OMX_IN OMX_HANDLETYPE         hComp,
   if(port == PORT_INDEX_IN)
   {
     // check if the buffer is valid
-    nPortIndex = buffer - ((!mUseProxyColorFormat)?m_inp_mem_ptr:meta_buffer_hdr);
+    nPortIndex = buffer - ((!meta_mode_enable)?m_inp_mem_ptr:meta_buffer_hdr);
 
     DEBUG_PRINT_LOW("free_buffer on i/p port - Port idx %d, actual cnt %d \n",
                     nPortIndex, m_sInPortDef.nBufferCountActual);
@@ -3439,7 +3439,7 @@ OMX_ERRORTYPE  omx_video::empty_this_buffer(OMX_IN OMX_HANDLETYPE         hComp,
     return OMX_ErrorIncorrectStateOperation;
   }
 
-  nBufferIndex = buffer - ((!mUseProxyColorFormat)?m_inp_mem_ptr:meta_buffer_hdr);
+  nBufferIndex = buffer - ((!meta_mode_enable)?m_inp_mem_ptr:meta_buffer_hdr);
 
   if(nBufferIndex > m_sInPortDef.nBufferCountActual )
   {
