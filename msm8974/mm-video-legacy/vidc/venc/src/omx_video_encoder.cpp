@@ -636,6 +636,7 @@ OMX_ERRORTYPE  omx_venc::set_parameter(OMX_IN OMX_HANDLETYPE     hComp,
 #endif
         {
             m_sInPortFormat.eColorFormat = portFmt->eColorFormat;
+            m_sInPortDef.format.video.eColorFormat = portFmt->eColorFormat;
             m_input_msg_id = OMX_COMPONENT_GENERATE_ETB;
             mUseProxyColorFormat = false;
         }
@@ -1010,7 +1011,7 @@ OMX_ERRORTYPE  omx_venc::set_parameter(OMX_IN OMX_HANDLETYPE     hComp,
           }
           meta_mode_enable = pParam->bStoreMetaData;
           if(meta_mode_enable) {
-            m_sInPortDef.nBufferCountActual = 4;
+            m_sInPortDef.nBufferCountActual = m_sInPortDef.nBufferCountMin;
             if(handle->venc_set_param(&m_sInPortDef,OMX_IndexParamPortDefinition) != true)
             {
               DEBUG_PRINT_ERROR("\nERROR: venc_set_param input failed");
