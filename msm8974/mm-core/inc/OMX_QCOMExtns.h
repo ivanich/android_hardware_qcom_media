@@ -496,6 +496,8 @@ enum OMX_QCOM_EXTN_INDEXTYPE
 
     /*"OMX.google.android.index.allocateNativeHandle"*/
     OMX_GoogleAndroidIndexAllocateNativeHandle = 0x7F000045,
+
+    OMX_QcomIndexParamPictureOrderCountType = 0x7F000054,
 };
 
 /**
@@ -1557,6 +1559,12 @@ typedef struct QOMX_VIDEO_HIERARCHICALLAYERS {
     OMX_U32 nNumLayers;
     QOMX_VIDEO_HIERARCHICALCODINGTYPE eHierarchicalCodingType;
 } QOMX_VIDEO_HIERARCHICALLAYERS;
+
+typedef struct QOMX_PICTURE_ORDER_COUNT_TYPE {
+    OMX_U32 nSize;
+    OMX_VERSIONTYPE nVersion;
+    OMX_U32 nType;
+} QOMX_PICTURE_ORDER_COUNT_TYPE;
 
 #ifdef __cplusplus
 }

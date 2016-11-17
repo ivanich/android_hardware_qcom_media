@@ -1852,6 +1852,12 @@ OMX_ERRORTYPE  omx_video::get_parameter(OMX_IN OMX_HANDLETYPE     hComp,
        }
        break;
     }
+  case OMX_QcomIndexParamPictureOrderCountType:
+    {
+      QOMX_PICTURE_ORDER_COUNT_TYPE *pParam = (QOMX_PICTURE_ORDER_COUNT_TYPE *)paramData;
+      memcpy(pParam, &m_sPicureOrderCount, sizeof(m_sPicureOrderCount));
+      break;
+    }
   case OMX_IndexParamVideoSliceFMO:
   default:
     {

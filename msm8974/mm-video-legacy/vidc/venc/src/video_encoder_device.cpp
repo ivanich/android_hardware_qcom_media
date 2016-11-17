@@ -1012,6 +1012,18 @@ bool venc_dev::venc_set_param(void *paramData,OMX_INDEXTYPE index )
        }
        break;
     }
+  case OMX_QcomIndexParamPictureOrderCountType:
+    {
+       QOMX_PICTURE_ORDER_COUNT_TYPE *pParam =
+          (QOMX_PICTURE_ORDER_COUNT_TYPE *)paramData;
+
+       if(venc_set_picture_order_count_type(pParam->nType) == false)
+       {
+         DEBUG_PRINT_ERROR("Setting poc type failed");
+         return false;
+       }
+       break;
+    }
   case OMX_IndexParamVideoSliceFMO:
   default:
 	  DEBUG_PRINT_ERROR("\nERROR: Unsupported parameter in venc_set_param: %u",
@@ -2999,6 +3011,21 @@ bool venc_dev::venc_max_allowed_bitrate_check(OMX_U32 nTargetBitrate)
       }
     }
     profile_tbl += 5;
+  }
+  return true;
+}
+
+bool venc_dev::venc_set_picture_order_count_type(OMX_U32 type)
+{
+  venc_poctype temp;
+  venc_ioctl_msg ioctl_msg = {&temp, NULL};
+
+  temp.poc_type = type;
+  DEBUG_PRINT_HIGH("Setting poc type: %d", type);
+  if(ioctl(m_nDriver_fd, VEN_IOCTL_SET_PIC_ORDER_CNT_TYPE, (void *)&ioctl_msg) < 0)
+  {
+    DEBUG_PRINT_ERROR("Request for setting poc type failed");
+    return false;
   }
   return true;
 }

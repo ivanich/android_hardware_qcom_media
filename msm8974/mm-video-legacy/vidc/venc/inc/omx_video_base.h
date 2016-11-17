@@ -567,6 +567,7 @@ public:
   OMX_U32 m_sDebugSliceinfo;
   OMX_U32 m_input_msg_id;
   OMX_VIDEO_CONFIG_ANDROID_INTRAREFRESHTYPE m_sConfigIntraRefresh;
+  QOMX_PICTURE_ORDER_COUNT_TYPE m_sPicureOrderCount;
 
   // fill this buffer queue
   omx_cmd_queue         m_ftb_q;
