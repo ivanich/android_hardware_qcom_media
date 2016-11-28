@@ -498,6 +498,7 @@ omx_vdec::omx_vdec(): msg_thread_id(0),
                       m_use_output_pmem(OMX_FALSE),
                       m_out_mem_region_smi(OMX_FALSE),
                       m_out_pvt_entry_pmem(OMX_FALSE),
+		      allocate_native_handle(false),
                       secure_mode(false)
 #ifdef _ANDROID_
                     ,iDivXDrmDecrypt(NULL)
@@ -3592,6 +3593,16 @@ OMX_ERRORTYPE  omx_vdec::set_parameter(OMX_IN OMX_HANDLETYPE     hComp,
       }
       break;
 #endif
+#if ALLOCATE_OUTPUT_NATIVEHANDLE
+    case OMX_GoogleAndroidIndexAllocateNativeHandle:
+      {
+          AllocateNativeHandleParams* allocateNativeHandleParams = (AllocateNativeHandleParams *) paramData;
+          if (allocateNativeHandleParams != NULL) {
+              allocate_native_handle = allocateNativeHandleParams->enable;
+          }
+      }
+      break;
+#endif //ALLOCATE_OUTPUT_NATIVEHANDLE
     case OMX_QcomIndexParamEnableTimeStampReorder:
       {
         QOMX_INDEXTIMESTAMPREORDER *reorder = (QOMX_INDEXTIMESTAMPREORDER *)paramData;
@@ -4016,6 +4027,11 @@ OMX_ERRORTYPE  omx_vdec::get_extension_index(OMX_IN OMX_HANDLETYPE      hComp,
     else if(!strncmp(paramName,"OMX.google.android.index.getAndroidNativeBufferUsage", sizeof("OMX.google.android.index.getAndroidNativeBufferUsage") - 1)) {
         *indexType = (OMX_INDEXTYPE)OMX_GoogleAndroidIndexGetAndroidNativeBufferUsage;
     }
+#if ALLOCATE_OUTPUT_NATIVEHANDLE
+    else if(!strncmp(paramName,"OMX.google.android.index.allocateNativeHandle", sizeof("OMX.google.android.index.allocateNativeHandle") -1)) {
+        *indexType = (OMX_INDEXTYPE)OMX_GoogleAndroidIndexAllocateNativeHandle;
+    }
+#endif //ALLOCATE_OUTPUT_NATIVEHANDLE
     else if (!strncmp(paramName,"OMX.google.android.index.prepareForAdaptivePlayback",
             sizeof("OMX.google.android.index.prepareForAdaptivePlayback") - 1)) {
         *indexType = (OMX_INDEXTYPE)OMX_QcomIndexParamVideoAdaptivePlaybackMode;
@@ -4502,6 +4518,10 @@ OMX_ERRORTYPE omx_vdec::free_input_buffer(OMX_BUFFERHEADERTYPE *bufferHdr)
                         drv_ctx.ptr_inputbuffer[index].bufferaddr);
            munmap (drv_ctx.ptr_inputbuffer[index].bufferaddr,
                    drv_ctx.ptr_inputbuffer[index].mmaped_size);
+       } else if (allocate_native_handle) {
+           native_handle_t *nh = (native_handle_t *)bufferHdr->pBuffer;
+           native_handle_close(nh);
+           native_handle_delete(nh);
        }
        close (drv_ctx.ptr_inputbuffer[index].pmem_fd);
        drv_ctx.ptr_inputbuffer[index].pmem_fd = -1;
@@ -4853,10 +4873,15 @@ OMX_ERRORTYPE  omx_vdec::allocate_input_buffer(
     input = *bufferHdr;
     BITMASK_SET(&m_inp_bm_count,i);
     DEBUG_PRINT_LOW("\n Buffer address %p of pmem",*bufferHdr);
-    if (secure_mode)
-         input->pBuffer = (OMX_U8 *)drv_ctx.ptr_inputbuffer [i].pmem_fd;
-    else
+    if (allocate_native_handle) {
+        native_handle_t *nh = native_handle_create(1 /*numFds*/, 0 /*numInts*/);
+        nh->data[0] = drv_ctx.ptr_inputbuffer[i].pmem_fd;
+        input->pBuffer = (OMX_U8 *)nh;
+    } else if (secure_mode) {
+         input->pBuffer = (OMX_U8 *)(intptr_t)drv_ctx.ptr_inputbuffer [i].pmem_fd;
+    } else {
          input->pBuffer           = (OMX_U8 *)buf_addr;
+    }
     input->nSize             = sizeof(OMX_BUFFERHEADERTYPE);
     input->nVersion.nVersion = OMX_SPEC_VERSION;
     input->nAllocLen         = drv_ctx.ip_buf.buffer_size;

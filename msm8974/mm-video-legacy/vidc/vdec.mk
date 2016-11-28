@@ -46,6 +46,10 @@ libOmxVdec-def += -DUSE_ION
 
 vdec-inc       := $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
 
+ifeq ($(TARGET_USES_MEDIA_EXTENSIONS),true)
+libOmxVdec-def += -DALLOCATE_OUTPUT_NATIVEHANDLE
+endif
+
 # ---------------------------------------------------------------------------------
 # 			Make the Shared library (libOmxVdec)
 # ---------------------------------------------------------------------------------
